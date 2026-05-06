@@ -43,7 +43,13 @@ func _ready():
 		transform.origin=Vector3(-0.02,-0.045,0.03)
 	elif controller==vr.rightController:
 		transform.origin=Vector3(0.02,-0.045,0.03)
-	p_c = load_p_c_data()
+	
+	var loaded_data = load_p_c_data()
+	if loaded_data != null:
+		p_c = loaded_data
+	else:
+		p_c = []
+		
 	vr.log_info("loaded templates are "+ str(p_c))
 func _physics_process(_delta):
 	var click = controller._button_pressed(track_button)
@@ -175,12 +181,13 @@ func recognize(points):
 		var n=p_c[u][0]
 		return [n,b]
 func cldmatch(candidate, template, minsof):
-	var step = floor(pow(candidate.size(),1-.5))
-	for i in range(0,candidate.size(),step):
+	var step = floor(pow(candidate[1].size(),1-.5))
+	if step == 0: step = 1
+	for i in range(0,candidate[1].size(),step):
 		var m1=cldd(candidate[1],template[1],i)
 		var m2=cldd(template[1],candidate[1],i)
 #		#vr_log_info("cloud_distance " + str(m1)+ ","+ str(m2))
-		minsof=min(m1,m2)
+		minsof=min(minsof, min(m1,m2))
 	return minsof
 var m=0
 func cldd(a,b,start):
@@ -216,7 +223,7 @@ func distance(a,b):
 #############################################################################
 #save load and clear
 #############################################################################
-var save_p_c_data = "user://p_c_data.dat"
+var save_p_c_data = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS) + "/handtrack/p_c_data.dat"
 func load_p_c_data():
 	var file = File.new()
 	var p_c_data = null

@@ -66,7 +66,13 @@ func _ready():
 		if !custom_names:
 			keyboard.queue_free()
 	if  load_previous_data:
-		p_c = load_p_c_data()
+		var loaded_data = load_p_c_data()
+		if loaded_data != null:
+			p_c = loaded_data
+		else:
+			p_c = []
+	else:
+		p_c = []
 	
 func _physics_process(delta):
 	var click = controller._button_pressed(track_button)
@@ -119,6 +125,14 @@ func _on_delete_pressed():
 	type_count=1
 	result_info.set_label_text("all gestures \n deleted")
 	delete_gesture()
+func _on_load_pressed():
+	var loaded_data = load_p_c_data()
+	if loaded_data != null:
+		p_c = loaded_data
+		result_info.set_label_text("gestures loaded")
+	else:
+		p_c = []
+		result_info.set_label_text("no data found")
 func _on_cancel_pressed():
 	if add_mode:
 		add_mode=false
@@ -154,6 +168,9 @@ func make_cloud(nm,pt):
 	point_cloud.resize(2)
 	point_cloud[0]=nm
 	var temp_pts=resample(pt,NumPoints)
+	if temp_pts.size() == 0:
+		vr.log_info("Not enough points to resample")
+		return null
 	temp_pts=_scale(temp_pts)
 	temp_pts=translateto(temp_pts)
 	point_cloud[1]=temp_pts
@@ -259,12 +276,13 @@ func delete_gesture():
 	p_c.clear()
 	clear_p_c_data()
 func cldmatch(candidate, template, minsof):
-	var step = floor(pow(candidate.size(),1-.5))
-	for i in range(0,candidate.size(),step):
+	var step = floor(pow(candidate[1].size(),1-.5))
+	if step == 0: step = 1
+	for i in range(0,candidate[1].size(),step):
 		var m1=cldd(candidate[1],template[1],i)
 		var m2=cldd(template[1],candidate[1],i)
 #		#vr_log_info("cloud_distance " + str(m1)+ ","+ str(m2))
-		minsof=min(m1,m2)
+		minsof=min(minsof, min(m1,m2))
 	return minsof
 var m=0
 func cldd(a,b,start):
@@ -300,8 +318,14 @@ func distance(a,b):
 #############################################################################
 #savingstuff
 #############################################################################
-var save_p_c_data = "user://p_c_data.dat"
+var save_p_c_data = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS) + "/handtrack/p_c_data.dat"
 func save_data(var data = null, var path = null):
+	var dir = Directory.new()
+	var folder_path = OS.get_system_dir(OS.SYSTEM_DIR_DOCUMENTS) + "/handtrack"
+	if not dir.dir_exists(folder_path):
+		var err = dir.make_dir_recursive(folder_path)
+		vr.log_info("Created directory " + folder_path + " result: " + str(err))
+		
 	var file = File.new()
 	var error = file.open(path, File.WRITE)
 	vr.log_info("file is " +str(error))
