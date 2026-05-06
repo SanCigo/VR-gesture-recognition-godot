@@ -1,6 +1,7 @@
 import json
 import os
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 
 def main():
     if not os.path.exists("p_c_data.json"):
@@ -36,6 +37,10 @@ def main():
         ax.set_xlabel('X Axis (Meters)')
         ax.set_ylabel('Y Axis (Meters)')
         ax.set_zlabel('Z Axis (Meters)')
+        
+        # ax.xaxis.set_major_locator(MultipleLocator(0.1))
+        # ax.yaxis.set_major_locator(MultipleLocator(0.1))
+        # ax.zaxis.set_major_locator(MultipleLocator(0.1))
         
         # Keep aspect ratio roughly equal if desired, scaling dynamically
         ax.legend()
